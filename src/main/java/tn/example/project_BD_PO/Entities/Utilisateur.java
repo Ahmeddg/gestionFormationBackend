@@ -26,7 +26,6 @@ public class Utilisateur {
     @JoinColumn(name = "id_role")
     private Role role;
 
-    // Hash password before saving
     public void setPassword(String rawPassword) {
         this.password = new BCryptPasswordEncoder().encode(rawPassword);
     }

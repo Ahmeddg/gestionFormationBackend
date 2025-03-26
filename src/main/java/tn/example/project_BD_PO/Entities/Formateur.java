@@ -1,6 +1,7 @@
 package tn.example.project_BD_PO.Entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 
 @Entity
@@ -22,16 +23,26 @@ public class Formateur {
     @Column(nullable = false)
     private String prenom;
 
+    @Email
     @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false, unique = true)
-    private int tel;
+    private String tel; // Changed from int to String
 
+    @Enumerated(EnumType.STRING) // Store enum as a string in DB
     @Column(nullable = false)
-    private String type; // interne ou externe
+    private FormateurType type;
 
     @ManyToOne
     @JoinColumn(name = "id_employeur", referencedColumnName = "id")
     private Employeur employeur;
+
+    public void setType(String type) {
+        this.type = FormateurType.valueOf(type);
+    }
+}
+
+enum FormateurType {
+    INTERNE, EXTERNE
 }
