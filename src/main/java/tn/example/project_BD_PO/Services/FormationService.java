@@ -40,20 +40,7 @@ public class FormationService {
         Domaine domaine = domaineRepository.findById(formation.getFormateur().getId()).orElseThrow();
         formation.setDomaine(domaine);
         formation.setFormateur(formateur);
-        if (!formation.getParticipants().isEmpty()){
-            Set<Participant> participants = new HashSet<>(
-                    participantRepository.findAllById(
-                            formation.getParticipants().stream()
-                                    .map(Participant::getId)
-                                    .toList()
-                    )
-            );
-
-            if (participants.isEmpty()) {
-                throw new RuntimeException("Participants not found");
-            }
-            formation.setParticipants(participants);
-        }
+        formation.setDateFin();
         return formationRepository.save(formation);
     }
 

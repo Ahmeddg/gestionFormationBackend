@@ -1,4 +1,5 @@
 package tn.example.project_BD_PO.Entities;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,6 +15,15 @@ public class Structure {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Enumerated(EnumType.STRING) // Store enum as String in DB
     @Column(nullable = false)
-    private String libelle;
+    private StructureType libelle;
+
+    public void setLibelle(String libelle) {
+        this.libelle = StructureType.valueOf(libelle);
+    }
+}
+
+enum StructureType {
+    CENTRALE, REGIONALE
 }

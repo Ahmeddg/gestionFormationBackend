@@ -1,7 +1,6 @@
 package tn.example.project_BD_PO.Entities;
 
 import jakarta.persistence.*;
-
 import lombok.*;
 
 @Entity
@@ -16,6 +15,11 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String nom;
+    private RoleType nom;
+}
+
+enum RoleType {
+    UTILISATEUR, ADMINISTRATEUR, RESPONSABLE
 }

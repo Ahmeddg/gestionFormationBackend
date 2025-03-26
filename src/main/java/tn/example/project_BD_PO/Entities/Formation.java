@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,6 +34,15 @@ public class Formation {
     @Column(nullable = false)
     private double budget;
 
+    @Column(nullable = false)
+    private String lieu;
+
+    @Column(nullable = false)
+    private Date dateDebut;
+
+    @Column
+    private Date dateFin;
+
     @ManyToOne
     @JoinColumn(name = "id_domaine", nullable = false)
     private Domaine domaine;
@@ -44,4 +56,11 @@ public class Formation {
     @ManyToMany(mappedBy = "formations")
     @JsonIgnoreProperties("formations") // Ignores Participant's formations field
     private Set<Participant> participants = new HashSet<>();
+
+    public void setDateFin() {
+        if (this.dateDebut != null) {
+            LocalDate startDate = this.dateDebut.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            this.dateFin = Date.from(startDate.plusDays(this.duree).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        }
+    }
 }
