@@ -1,0 +1,47 @@
+package tn.example.project_BD_PO.Entities;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = "participants")
+@Table(name = "formation")
+public class Formation {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    @Column(nullable = false)
+    private String titre;
+
+    @Column(nullable = false)
+    private int annee;
+
+    @Column(nullable = false)
+    private int duree;
+
+    @Column(nullable = false)
+    private double budget;
+
+    @ManyToOne
+    @JoinColumn(name = "id_domaine", nullable = false)
+    private Domaine domaine;
+
+
+
+    @ManyToOne
+    @JoinColumn(name = "id_formateur", nullable = false)
+    private Formateur formateur;
+
+    @ManyToMany(mappedBy = "formations")
+    @JsonIgnoreProperties("formations") // Ignores Participant's formations field
+    private Set<Participant> participants = new HashSet<>();
+}
