@@ -1,5 +1,6 @@
 package tn.example.project_BD_PO.Services;
 
+import lombok.RequiredArgsConstructor;
 import tn.example.project_BD_PO.Entities.Domaine;
 import tn.example.project_BD_PO.Entities.Formateur;
 import tn.example.project_BD_PO.Entities.Formation;
@@ -17,15 +18,14 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class FormationService {
-    @Autowired
-    private FormationRepository formationRepository;
-    @Autowired
-    private FormateurRepository formateurRepository;
-    @Autowired
-    private DomaineRepository domaineRepository;
-    @Autowired
-    private ParticipantRepository participantRepository;
+    
+    private final FormationRepository formationRepository;
+    private final FormateurRepository formateurRepository;
+    private final DomaineRepository domaineRepository;
+    private final ParticipantRepository participantRepository;
+
 
     public List<Formation> getAllFormations() {
         return formationRepository.findAll();
@@ -42,6 +42,16 @@ public class FormationService {
         formation.setFormateur(formateur);
         formation.setDateFin();
         return formationRepository.save(formation);
+    }
+
+    public void addParticipantsToFormation(Formation formation, List<Integer> participantIds) {
+        Set<Participant> participants = new HashSet<>();
+        for (Integer id : participantIds) {
+            Participant participant = participantRepository.findById(id).orElseThrow();
+            participants.add(participant);
+        }
+        formation.setParticipants(participants);
+        formationRepository.save(formation);
     }
 
     public void deleteFormation(int id) {

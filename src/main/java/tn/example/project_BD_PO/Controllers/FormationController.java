@@ -37,6 +37,14 @@ public class FormationController {
         return ResponseEntity.ok(formationService.saveFormation(formation));
     }
 
+    @PostMapping("/{formationId}/add_participants")
+    public ResponseEntity<Formation> addParticipantToFormation(@RequestBody List<Integer> participantIds, @PathVariable int formationId) {
+        Formation formation = formationService.getFormationById(formationId)
+                .orElseThrow(() -> new RuntimeException("Formation not found"));
+        formationService.addParticipantsToFormation(formation, participantIds);
+        return ResponseEntity.ok(formationService.saveFormation(formation));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Formation> updateFormation(@PathVariable int id, @RequestBody Formation formation) {
         if (formationService.getFormationById(id).isEmpty()) {
