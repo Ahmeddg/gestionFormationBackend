@@ -2,13 +2,17 @@ package tn.example.project_BD_PO.Controllers;
 
 import lombok.*;
 import org.springframework.http.HttpStatus;
+import tn.example.project_BD_PO.Entities.Role;
+import tn.example.project_BD_PO.Entities.RoleType;
 import tn.example.project_BD_PO.Entities.Utilisateur;
+import tn.example.project_BD_PO.Services.RoleService;
 import tn.example.project_BD_PO.Services.UtilisateurService;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @Getter
 class LoginRequest {
@@ -24,6 +28,8 @@ public class UtilisateurController {
 
     @Autowired
     private UtilisateurService utilisateurService;
+    @Autowired
+    private RoleService roleService;
 
     @GetMapping
     public List<Utilisateur> getAllUtilisateurs() {
@@ -45,7 +51,22 @@ public class UtilisateurController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
 
-        // Return user data (or generate a JWT token)
+        return ResponseEntity.ok(utilisateur);
+    }
+
+    @PostMapping("/updateRole/{userId}/{roleId}")
+    public ResponseEntity<?> updateRole(@PathVariable int  userId,@PathVariable int  roleId,@RequestBody LoginRequest loginRequest) {
+        Utilisateur adminUtilisateur = utilisateurService.authenticate(loginRequest.getLogin(), loginRequest.getPassword());
+        if (adminUtilisateur == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
+        if (adminUtilisateur.getRole().getNom() != RoleType.ADMINISTRATEUR) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You are not authorized to perform this action");
+        }
+        Optional<Utilisateur> utilisateur = utilisateurService.getUtilisateurById(userId);
+        Optional<Role> role = roleService.getRoleById(roleId);
+        utilisateur.get().setRole(role.get());
+        utilisateurService.saveUtilisateur(utilisateur.get());
         return ResponseEntity.ok(utilisateur);
     }
 
