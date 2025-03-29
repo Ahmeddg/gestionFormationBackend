@@ -7,7 +7,6 @@ import tn.example.project_BD_PO.Entities.RoleType;
 import tn.example.project_BD_PO.Entities.Utilisateur;
 import tn.example.project_BD_PO.Services.RoleService;
 import tn.example.project_BD_PO.Services.UtilisateurService;
-import org.springframework.beans.factory.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,18 +21,23 @@ class LoginRequest {
 
 
 @RestController
+@RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/utilisateurs")
 public class UtilisateurController {
 
-    @Autowired
-    private UtilisateurService utilisateurService;
-    @Autowired
-    private RoleService roleService;
+
+    private final UtilisateurService utilisateurService;
+    private final RoleService roleService;
 
     @GetMapping
     public List<Utilisateur> getAllUtilisateurs() {
         return utilisateurService.getAllUtilisateurs();
+    }
+
+    @GetMapping("/roles")
+    public List<Role> getAllRoles() {
+        return roleService.getAllRoles();
     }
 
     @GetMapping("/{id}")
