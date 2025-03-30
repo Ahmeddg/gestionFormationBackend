@@ -1,6 +1,8 @@
 package tn.example.project_BD_PO.Services;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import tn.example.project_BD_PO.Entities.Domaine;
 import tn.example.project_BD_PO.Entities.Formateur;
 import tn.example.project_BD_PO.Entities.Formation;
@@ -8,14 +10,10 @@ import tn.example.project_BD_PO.Entities.Participant;
 import tn.example.project_BD_PO.Repositories.DomaineRepository;
 import tn.example.project_BD_PO.Repositories.FormateurRepository;
 import tn.example.project_BD_PO.Repositories.FormationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tn.example.project_BD_PO.Repositories.ParticipantRepository;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +52,17 @@ public class FormationService {
         formationRepository.save(formation);
     }
 
-    public void deleteFormation(int id) {
-        formationRepository.deleteById(id);
+    @Transactional
+    public void deleteFormation(int formationId) {
+        Formation formation = formationRepository.findById(formationId)
+                .orElseThrow(() -> new EntityNotFoundException("Formation not found"));
+
+        // Clear participants from the formation
+        for (Participant participant : new ArrayList<>(formation.getParticipants())) {
+            participant.getFormations().remove(formation);
+            participantRepository.save(participant);
+        }
+
+        formationRepository.delete(formation);
     }
 }
