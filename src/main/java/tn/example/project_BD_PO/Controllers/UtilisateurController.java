@@ -1,24 +1,17 @@
 package tn.example.project_BD_PO.Controllers;
 
-import lombok.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 import tn.example.project_BD_PO.Entities.Role;
-import tn.example.project_BD_PO.Entities.RoleType;
 import tn.example.project_BD_PO.Entities.Utilisateur;
 import tn.example.project_BD_PO.Services.RoleService;
 import tn.example.project_BD_PO.Services.UtilisateurService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-
-@Getter
-class LoginRequest {
-    private String login;
-    private String password;
-}
-
 
 @RestController
 @RequiredArgsConstructor
@@ -26,11 +19,11 @@ class LoginRequest {
 @RequestMapping("/utilisateurs")
 public class UtilisateurController {
 
-
     private final UtilisateurService utilisateurService;
     private final RoleService roleService;
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
     public List<Utilisateur> getAllUtilisateurs() {
         return utilisateurService.getAllUtilisateurs();
     }
@@ -47,28 +40,19 @@ public class UtilisateurController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        Utilisateur utilisateur = utilisateurService.authenticate(loginRequest.getLogin(), loginRequest.getPassword());
-
-        if (utilisateur == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-        }
-
-        return ResponseEntity.ok(utilisateur);
-    }
-
     @PostMapping("/updateRole/{userId}/{roleId}")
-    public ResponseEntity<?> updateRole(@PathVariable int  userId,@PathVariable int  roleId,@RequestBody LoginRequest loginRequest) {
-        Utilisateur adminUtilisateur = utilisateurService.authenticate(loginRequest.getLogin(), loginRequest.getPassword());
-        if (adminUtilisateur == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-        }
-        if (adminUtilisateur.getRole().getNom() != RoleType.ADMINISTRATEUR) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You are not authorized to perform this action");
-        }
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
+    public ResponseEntity<?> updateRole(
+            @PathVariable int userId,
+            @PathVariable int roleId
+    ) {
         Optional<Utilisateur> utilisateur = utilisateurService.getUtilisateurById(userId);
         Optional<Role> role = roleService.getRoleById(roleId);
+
+        if (utilisateur.isEmpty() || role.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
         utilisateur.get().setRole(role.get());
         utilisateurService.saveUtilisateur(utilisateur.get());
         return ResponseEntity.ok(utilisateur);
@@ -80,7 +64,10 @@ public class UtilisateurController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Utilisateur> updateUtilisateur(@PathVariable Integer id, @RequestBody Utilisateur utilisateur) {
+    public ResponseEntity<Utilisateur> updateUtilisateur(
+            @PathVariable Integer id,
+            @RequestBody Utilisateur utilisateur
+    ) {
         if (utilisateurService.getUtilisateurById(id).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -89,6 +76,7 @@ public class UtilisateurController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
     public ResponseEntity<Void> deleteUtilisateur(@PathVariable Integer id) {
         if (utilisateurService.getUtilisateurById(id).isEmpty()) {
             return ResponseEntity.notFound().build();
