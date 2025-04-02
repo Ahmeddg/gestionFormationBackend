@@ -1,5 +1,6 @@
 package tn.example.project_BD_PO.Controllers;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/statistic")
 @RequiredArgsConstructor
 public class StatisticController {

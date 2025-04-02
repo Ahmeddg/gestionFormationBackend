@@ -1,5 +1,7 @@
 package tn.example.project_BD_PO.Controllers;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.transaction.Transactional;
 import tn.example.project_BD_PO.Entities.Participant;
 import tn.example.project_BD_PO.Services.ParticipantService;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +14,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/participants")
 @RequiredArgsConstructor
 public class ParticipantController {
@@ -56,12 +58,10 @@ public class ParticipantController {
     public ResponseEntity<Participant> addFormationToParticipant(
             @PathVariable Integer participantId,
             @PathVariable Integer formationId) {
-        try {
+
             Participant updatedParticipant = participantService.addFormationToParticipant(participantId, formationId);
             return ResponseEntity.ok(updatedParticipant);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(404).body(null);  // Or customize your error response
-        }
+
     }
 
     // Endpoint to remove formation from participant
@@ -69,12 +69,10 @@ public class ParticipantController {
     public ResponseEntity<Participant> removeFormationFromParticipant(
             @PathVariable Integer participantId,
             @PathVariable Integer formationId) {
-        try {
+
             Participant updatedParticipant = participantService.removeFormationFromParticipant(participantId, formationId);
             return ResponseEntity.ok(updatedParticipant);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(404).body(null);  // Or customize your error response
-        }
+
     }
 
     // Exception handling

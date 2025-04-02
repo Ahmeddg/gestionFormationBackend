@@ -1,6 +1,8 @@
 package tn.example.project_BD_PO.Entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
@@ -15,6 +17,7 @@ public class Domaine {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @NotBlank(message =  "Libelle est obligatoire")
     @Column(nullable = false)
     private String libelle;
 

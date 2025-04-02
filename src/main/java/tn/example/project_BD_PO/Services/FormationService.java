@@ -34,8 +34,8 @@ public class FormationService {
     }
 
     public Formation saveFormation(Formation formation) {
-        Formateur formateur = formateurRepository.findById(formation.getDomaine().getId()).orElseThrow();
-        Domaine domaine = domaineRepository.findById(formation.getFormateur().getId()).orElseThrow();
+        Formateur formateur = formateurRepository.findById(formation.getFormateur().getId()).orElseThrow();
+        Domaine domaine = domaineRepository.findById(formation.getDomaine().getId()).orElseThrow();
         formation.setDomaine(domaine);
         formation.setFormateur(formateur);
         formation.setDateFin();

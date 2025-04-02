@@ -1,13 +1,12 @@
 package tn.example.project_BD_PO.Controllers;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import tn.example.project_BD_PO.Entities.Role;
 import tn.example.project_BD_PO.Entities.Utilisateur;
-import tn.example.project_BD_PO.Services.RoleService;
 import tn.example.project_BD_PO.Services.UtilisateurService;
 
 import java.util.List;
@@ -15,12 +14,11 @@ import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/utilisateurs")
 public class UtilisateurController {
 
     private final UtilisateurService utilisateurService;
-    private final RoleService roleService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMINISTRATEUR')")
@@ -29,8 +27,8 @@ public class UtilisateurController {
     }
 
     @GetMapping("/roles")
-    public List<Role> getAllRoles() {
-        return roleService.getAllRoles();
+    public List<String> getAllRoles() {
+        return utilisateurService.getAllRoles();
     }
 
     @GetMapping("/{id}")
@@ -40,20 +38,19 @@ public class UtilisateurController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/updateRole/{userId}/{roleId}")
+    @PostMapping("/updateRole/{userId}/{role}")
     @PreAuthorize("hasRole('ADMINISTRATEUR')")
     public ResponseEntity<?> updateRole(
             @PathVariable int userId,
-            @PathVariable int roleId
+            @PathVariable String role
     ) {
         Optional<Utilisateur> utilisateur = utilisateurService.getUtilisateurById(userId);
-        Optional<Role> role = roleService.getRoleById(roleId);
 
         if (utilisateur.isEmpty() || role.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        utilisateur.get().setRole(role.get());
+        utilisateur.get().setRole(Role.valueOf(role));
         utilisateurService.saveUtilisateur(utilisateur.get());
         return ResponseEntity.ok(utilisateur);
     }

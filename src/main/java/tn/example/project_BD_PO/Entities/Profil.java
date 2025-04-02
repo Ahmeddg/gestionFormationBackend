@@ -2,6 +2,7 @@ package tn.example.project_BD_PO.Entities;
 
 import jakarta.persistence.*;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Entity
@@ -17,6 +18,6 @@ public class Profil {
     private Integer id;
 
     @Column
+    @NotBlank(message = "libelle is mandatory")
     private String libelle;
-
 }

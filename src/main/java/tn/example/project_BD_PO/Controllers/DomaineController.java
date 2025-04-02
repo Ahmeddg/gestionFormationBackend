@@ -1,5 +1,6 @@
 package tn.example.project_BD_PO.Controllers;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import tn.example.project_BD_PO.Entities.Domaine;
 import tn.example.project_BD_PO.Services.DomaineService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/domaines")
 public class DomaineController {
 

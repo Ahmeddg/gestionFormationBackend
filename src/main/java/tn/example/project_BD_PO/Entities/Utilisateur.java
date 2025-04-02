@@ -1,14 +1,15 @@
 package tn.example.project_BD_PO.Entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 
 @Entity
 @Getter
@@ -16,59 +17,75 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-@Table(name = "Utilisateur")
+@ToString(exclude = "password")  // Exclude password from toString()
+@Table
 public class Utilisateur implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String login;
+    @NotBlank(message = "Username is required")
+    @Size(min = 4, max = 50, message = "Username must be between 4-50 characters")
+    @Column(unique = true, nullable = false, length = 50)
+    private String username;
 
-    @NonNull
+    @NotBlank(message = "Password is required")
+    @Column(nullable = false, length = 60)  // BCrypt hash length is 60
     private String password;
 
-    @ManyToOne
-    @JoinColumn(name = "id_role")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private Role role;
 
-    public void setPassword(String rawPassword) {
-        this.password = new BCryptPasswordEncoder().encode(rawPassword);
-    }
+    @Column(nullable = false)
+    private boolean enabled = true;
 
-    public boolean matchPassword(String rawPassword) {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        return encoder.matches(rawPassword, password);
-    }
+    @Column(nullable = false)
+    private boolean accountNonExpired = true;
+
+    @Column(nullable = false)
+    private boolean accountNonLocked = true;
+
+    @Column(nullable = false)
+    private boolean credentialsNonExpired = true;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.getNom().name()));
+        return Collections.singletonList(new SimpleGrantedAuthority(role.name()));
     }
 
     @Override
     public String getUsername() {
-        return login;
+        return username;
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return true;
+        return accountNonExpired;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return accountNonLocked;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
+        return credentialsNonExpired;
     }
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
+    }
+
+    // PrePersist hook for initial setup
+    @PrePersist
+    public void prePersist() {
+        if (this.role == null) {
+            this.role = Role.UTILISATEUR; // Default role
+        }
     }
 }
+

@@ -31,8 +31,7 @@ public class Participant {
     @Column(nullable = false)
     private String prenom;
 
-    @ManyToOne
-    @JoinColumn(name = "id_structure",referencedColumnName = "id", nullable = false)
+    @Column(nullable = false)
     private Structure structure;
 
     @ManyToOne

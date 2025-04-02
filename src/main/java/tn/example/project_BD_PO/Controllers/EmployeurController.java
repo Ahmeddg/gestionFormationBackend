@@ -1,5 +1,6 @@
 package tn.example.project_BD_PO.Controllers;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import tn.example.project_BD_PO.Entities.Employeur;
 import tn.example.project_BD_PO.Services.EmployeurService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/employeurs")
 public class EmployeurController {
 
