@@ -1,6 +1,7 @@
 package tn.example.project_BD_PO.Controllers;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.security.access.prepost.PreAuthorize;
 import tn.example.project_BD_PO.Entities.Profil;
 import tn.example.project_BD_PO.Services.ProfilService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,12 +34,14 @@ public class ProfilController {
     }
 
     // Create a new profil
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @PostMapping
     public ResponseEntity<Profil> createProfil(@RequestBody Profil profil) {
         return ResponseEntity.ok(profilService.saveProfil(profil));
     }
 
     // Update an existing profil
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @PutMapping("/{id}")
     public ResponseEntity<Profil> updateProfil(@PathVariable Integer id, @RequestBody Profil profil) {
         if (profilService.getProfil(id) == null) {
@@ -49,6 +52,7 @@ public class ProfilController {
     }
 
     // Delete a profil by ID
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProfil(@PathVariable Integer id) {
         Optional<Profil> existingProfil = Optional.ofNullable(profilService.getProfil(id));

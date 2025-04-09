@@ -1,6 +1,7 @@
 package tn.example.project_BD_PO.Controllers;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.security.access.prepost.PreAuthorize;
 import tn.example.project_BD_PO.Entities.Domaine;
 import tn.example.project_BD_PO.Services.DomaineService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,11 +32,13 @@ public class DomaineController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @PostMapping
     public ResponseEntity<Domaine> createDomaine(@RequestBody Domaine domaine) {
         return ResponseEntity.ok(domaineService.saveDomaine(domaine));
     }
 
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @PutMapping("/{id}")
     public ResponseEntity<Domaine> updateDomaine(@PathVariable Integer id, @RequestBody Domaine domaine) {
         if (domaineService.getDomaineById(id).isEmpty()) {
@@ -45,6 +48,7 @@ public class DomaineController {
         return ResponseEntity.ok(domaineService.saveDomaine(domaine));
     }
 
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDomaine(@PathVariable Integer id) {
         if (domaineService.getDomaineById(id).isEmpty()) {

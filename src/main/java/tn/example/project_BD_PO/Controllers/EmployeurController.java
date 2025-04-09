@@ -1,6 +1,7 @@
 package tn.example.project_BD_PO.Controllers;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.security.access.prepost.PreAuthorize;
 import tn.example.project_BD_PO.Entities.Employeur;
 import tn.example.project_BD_PO.Services.EmployeurService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,11 +30,13 @@ public class EmployeurController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @PostMapping
     public ResponseEntity<Employeur> createEmployeur(@RequestBody Employeur employeur) {
         return ResponseEntity.ok(employeurService.saveEmployeur(employeur));
     }
 
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @PutMapping("/{id}")
     public ResponseEntity<Employeur> updateEmployeur(@PathVariable Integer id, @RequestBody Employeur employeur) {
         if (employeurService.getEmployeurById(id).isEmpty()) {
@@ -43,6 +46,7 @@ public class EmployeurController {
         return ResponseEntity.ok(employeurService.saveEmployeur(employeur));
     }
 
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEmployeur(@PathVariable Integer id) {
         if (employeurService.getEmployeurById(id).isEmpty()) {
