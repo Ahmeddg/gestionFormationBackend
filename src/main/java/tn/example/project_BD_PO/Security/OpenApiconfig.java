@@ -1,6 +1,7 @@
 package tn.example.project_BD_PO.Security;
 
 
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
@@ -12,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiconfig {
-
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()

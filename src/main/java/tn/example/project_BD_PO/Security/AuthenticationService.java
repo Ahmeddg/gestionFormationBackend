@@ -6,17 +6,19 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.stereotype.Service;
 import tn.example.project_BD_PO.Entities.Utilisateur;
 import tn.example.project_BD_PO.Repositories.UtilisateurRepository;
+import tn.example.project_BD_PO.Services.UtilisateurService;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
 
+    private final UtilisateurService service;
     private final UtilisateurRepository repository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
     public AuthenticationResponse register(Utilisateur request) {
-        repository.save(request);
+        service.saveUtilisateur(request);
         var jwtToken = jwtService.generateToken(request);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
@@ -38,5 +40,10 @@ public class AuthenticationService {
                 .token(jwtToken)
                 .role(String.valueOf(user.getRole()))
                 .build();
+    }
+    public Utilisateur getUserFromToken(String jwtToken) {
+        String username = jwtService.extractUsername(jwtToken);
+        return repository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

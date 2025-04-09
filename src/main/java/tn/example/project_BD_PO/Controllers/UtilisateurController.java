@@ -55,11 +55,13 @@ public class UtilisateurController {
         return ResponseEntity.ok(utilisateur);
     }
 
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @PostMapping
     public ResponseEntity<Utilisateur> createUtilisateur(@RequestBody Utilisateur utilisateur) {
         return ResponseEntity.ok(utilisateurService.saveUtilisateur(utilisateur));
     }
 
+    @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @PutMapping("/{id}")
     public ResponseEntity<Utilisateur> updateUtilisateur(
             @PathVariable Integer id,
@@ -72,8 +74,9 @@ public class UtilisateurController {
         return ResponseEntity.ok(utilisateurService.saveUtilisateur(utilisateur));
     }
 
-    @DeleteMapping("/{id}")
+
     @PreAuthorize("hasRole('ADMINISTRATEUR')")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUtilisateur(@PathVariable Integer id) {
         if (utilisateurService.getUtilisateurById(id).isEmpty()) {
             return ResponseEntity.notFound().build();
