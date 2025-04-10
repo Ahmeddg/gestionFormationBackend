@@ -38,4 +38,7 @@ public class StatisticService {
                 .max(Comparator.comparingLong(formationRepository::countByFormateur))
                 .orElse(null);
     }
+    public long getTotalParticipants(){
+        return formateurRepository.count();
+    }
 }

@@ -45,4 +45,11 @@ public class StatisticController {
     public ResponseEntity<Formateur> getBestFormateur() {
         return ResponseEntity.ok(statisticService.getBestFormateur());
     }
+
+
+    @PreAuthorize("hasRole('ADMINISTRATEUR') or hasRole('RESPONSABLE')")
+    @GetMapping("/total-participants")
+    public ResponseEntity<Long> getTotalParticipants() {
+        return ResponseEntity.ok(statisticService.getTotalParticipants());
+    }
 }
