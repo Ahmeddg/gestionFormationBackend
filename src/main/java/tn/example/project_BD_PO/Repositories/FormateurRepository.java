@@ -6,5 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FormateurRepository extends JpaRepository<Formateur, Integer> {
+    boolean existsByEmployeurId(Integer employeurId);
+
 
 }

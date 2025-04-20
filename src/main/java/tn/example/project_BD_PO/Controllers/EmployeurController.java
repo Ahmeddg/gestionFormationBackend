@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @SecurityRequirement(name = "bearerAuth")
@@ -48,11 +49,22 @@ public class EmployeurController {
 
     @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEmployeur(@PathVariable Integer id) {
+    public ResponseEntity<?> deleteEmployeur(@PathVariable Integer id) {
         if (employeurService.getEmployeurById(id).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        employeurService.deleteEmployeur(id);
-        return ResponseEntity.noContent().build();
+
+        try {
+            if (employeurService.isEmployeurAssignedToFormateur(id)) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "Cet employeur est assigné à un formateur et ne peut pas être supprimé."));
+            }
+            employeurService.deleteEmployeur(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("message", "Une erreur inattendue s'est produite lors de la suppression."));
+        }
     }
+
 }

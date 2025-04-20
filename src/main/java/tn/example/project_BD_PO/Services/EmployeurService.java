@@ -4,6 +4,7 @@ import tn.example.project_BD_PO.Entities.Employeur;
 import tn.example.project_BD_PO.Repositories.EmployeurRepository;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.stereotype.Service;
+import tn.example.project_BD_PO.Repositories.FormateurRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,13 @@ public class EmployeurService {
     // Save new or update existing employeur
     public Employeur saveEmployeur(Employeur employeur) {
         return employeurRepository.save(employeur);
+    }
+
+    @Autowired
+    private FormateurRepository formateurRepository;
+
+    public boolean isEmployeurAssignedToFormateur(Integer id) {
+        return formateurRepository.existsByEmployeurId(id);
     }
 
     // Delete employeur by id

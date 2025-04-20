@@ -1,16 +1,17 @@
 package tn.example.project_BD_PO.Controllers;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import org.springframework.security.access.prepost.PreAuthorize;
 import tn.example.project_BD_PO.Entities.Domaine;
 import tn.example.project_BD_PO.Services.DomaineService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @SecurityRequirement(name = "bearerAuth")
@@ -50,11 +51,20 @@ public class DomaineController {
 
     @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDomaine(@PathVariable Integer id) {
+    public ResponseEntity<?> deleteDomaine(@PathVariable Integer id) {
         if (domaineService.getDomaineById(id).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        domaineService.deleteDomaine(id);
-        return ResponseEntity.noContent().build();
+        try {
+            domaineService.deleteDomaine(id);
+            return ResponseEntity.noContent().build();
+        } catch (DataIntegrityViolationException ex) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("message", "Ce domaine est assigné à une formation et ne peut pas être supprimé."));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("message", "Une erreur inattendue s'est produite lors de la suppression."));
+        }
     }
 }

@@ -6,7 +6,8 @@ import tn.example.project_BD_PO.Services.FormateurService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.dao.DataIntegrityViolationException;
+import java.util.Map;
 import java.util.List;
 
 @RestController
@@ -44,11 +45,20 @@ public class FormateurController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFormateur(@PathVariable Integer id) {
+    public ResponseEntity<?> deleteFormateur(@PathVariable Integer id) {
         if (formateurService.getFormateurById(id).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        formateurService.deleteFormateur(id);
-        return ResponseEntity.noContent().build();
+        try {
+            formateurService.deleteFormateur(id);
+            return ResponseEntity.noContent().build();
+        } catch (DataIntegrityViolationException ex) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("message", "Ce formateur est assigné à une formation et ne peut pas être supprimé."));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("message", "Une erreur inattendue s'est produite lors de la suppression."));
+        }
     }
 }
