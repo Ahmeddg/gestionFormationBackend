@@ -63,4 +63,7 @@ public class Formation {
             this.dateFin = Date.from(startDate.plusDays(this.duree).atStartOfDay(ZoneId.systemDefault()).toInstant());
         }
     }
+    public long getParticipantsCount() {
+        return participants.size();
+    }
 }

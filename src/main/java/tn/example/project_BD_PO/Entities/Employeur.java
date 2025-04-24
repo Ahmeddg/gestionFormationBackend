@@ -15,6 +15,6 @@ public class Employeur {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @NotBlank(message = "nom de l'employeur est obligatoire")
-    @Column(nullable = false)
+    @Column(nullable = false , unique = true)
     private String nomEmployeur;
 }

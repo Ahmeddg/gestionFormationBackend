@@ -43,13 +43,11 @@ public class FormationService {
     }
 
     public void addParticipantsToFormation(Formation formation, List<Integer> participantIds) {
-        Set<Participant> participants = new HashSet<>();
         for (Integer id : participantIds) {
             Participant participant = participantRepository.findById(id).orElseThrow();
-            participants.add(participant);
+            participant.getFormations().add(formation); // Owning side
+            participantRepository.save(participant); // Save owning side
         }
-        formation.setParticipants(participants);
-        formationRepository.save(formation);
     }
 
     @Transactional

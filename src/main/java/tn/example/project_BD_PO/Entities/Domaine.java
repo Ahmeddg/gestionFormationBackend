@@ -18,7 +18,8 @@ public class Domaine {
     private Integer id;
 
     @NotBlank(message =  "Libelle est obligatoire")
-    @Column(nullable = false)
+    @Column(nullable = false , unique = true)
+    @NotNull(message = "Libelle ne doit pas être nul")
     private String libelle;
 
 

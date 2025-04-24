@@ -17,7 +17,7 @@ public class Profil {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column
+    @Column(unique = true)
     @NotBlank(message = "libelle is mandatory")
     private String libelle;
 }

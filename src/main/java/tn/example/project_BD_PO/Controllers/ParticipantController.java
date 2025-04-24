@@ -1,7 +1,6 @@
 package tn.example.project_BD_PO.Controllers;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.transaction.Transactional;
 import tn.example.project_BD_PO.Entities.Participant;
 import tn.example.project_BD_PO.Services.ParticipantService;
 import lombok.RequiredArgsConstructor;

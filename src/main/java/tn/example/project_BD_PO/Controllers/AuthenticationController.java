@@ -1,8 +1,5 @@
 package tn.example.project_BD_PO.Controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,11 +29,21 @@ public class AuthenticationController {
         return ResponseEntity.ok(authenticationService.authenticate(request));
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+
     @GetMapping("/user-info")
-    public ResponseEntity<Utilisateur> getUserInfo( @RequestHeader(value = "Authorization" ,required = false) String authHeader) {
+    public ResponseEntity<Utilisateur> getUserInfo(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).build();
+        }
+
         String jwtToken = authHeader.substring(7);
         Utilisateur user = authenticationService.getUserFromToken(jwtToken);
-        return ResponseEntity.ok(user);
+
+        if (user != null) {
+            return ResponseEntity.ok(user); // renvoie l'utilisateur récupéré
+        } else {
+            return ResponseEntity.status(401).build();
+        }
     }
+
 }

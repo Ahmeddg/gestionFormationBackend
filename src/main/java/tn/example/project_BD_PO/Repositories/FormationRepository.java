@@ -11,6 +11,9 @@ import java.util.List;
 
 @Repository
 public interface FormationRepository extends JpaRepository<Formation, Integer> {
+    
+    @Query("SELECT COUNT(f) FROM Formation f WHERE f.dateFin > CURRENT_DATE")
+    long countActiveFormations();
     long countByFormateur(Formateur formateur);
     @Query("SELECT f FROM Formation f ORDER BY SIZE(f.participants) DESC LIMIT 3")
     List<Formation> findMostPopularFormations();

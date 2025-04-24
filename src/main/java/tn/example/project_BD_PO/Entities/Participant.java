@@ -43,7 +43,7 @@ public class Participant {
     private String email;
 
     @NotBlank(message = "Phone number is required")
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String tel;
 
     @ManyToMany
