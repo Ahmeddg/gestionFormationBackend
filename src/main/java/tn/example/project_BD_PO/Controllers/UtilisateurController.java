@@ -15,11 +15,12 @@ import tn.example.project_BD_PO.Entities.Role;
 import tn.example.project_BD_PO.Entities.Utilisateur;
 import tn.example.project_BD_PO.Services.UtilisateurService;
 import tn.example.project_BD_PO.Security.ErrorResponse;
-
+import tn.example.project_BD_PO.Security.AuthenticationRequest;
+import tn.example.project_BD_PO.Security.AuthenticationResponse;
+import tn.example.project_BD_PO.Security.AuthenticationService;
 
 import java.util.List;
 import java.util.Optional;
-
 
 class PasswordChangeRequest {
     private String username;
@@ -42,6 +43,7 @@ class PasswordChangeRequest {
 public class UtilisateurController {
 
     private final UtilisateurService utilisateurService;
+    private final AuthenticationService authenticationService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMINISTRATEUR')")
@@ -117,20 +119,25 @@ public class UtilisateurController {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body(ErrorResponse.createBasicError(HttpStatus.BAD_REQUEST, "Invalid request data", "VALIDATION_ERROR"));
         }
-        if (!userDetails.getUsername().equals(request.getUsername())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(ErrorResponse.createBasicError(HttpStatus.FORBIDDEN, "You are not allowed to update this user", "FORBIDDEN"));
-        }
         Optional<Utilisateur> optionalUser = utilisateurService.getUtilisateurById(id);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ErrorResponse.createBasicError(HttpStatus.NOT_FOUND, "Utilisateur not found with id: " + id, "UTILISATEUR_NOT_FOUND"));
         }
         Utilisateur user = optionalUser.get();
+
+        if (!userDetails.getUsername().equals(user.getUsername())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ErrorResponse.createBasicError(HttpStatus.FORBIDDEN, "You are not allowed to update this user", "FORBIDDEN"));
+        }
+
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ErrorResponse.createBasicError(HttpStatus.UNAUTHORIZED, "Current password is incorrect", "INCORRECT_PASSWORD"));
         }
+        user.setUsername(request.getUsername());
+
+        String passwordToUse = request.getOldPassword(); // Default to old password if no new one provided
         if (request.getNewPassword() != null && !request.getNewPassword().isEmpty()) {
             if (request.getNewPassword().length() < 8) {
                 return ResponseEntity.badRequest().body(ErrorResponse.createBasicError(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters", "WEAK_PASSWORD"));
@@ -138,11 +145,18 @@ public class UtilisateurController {
             if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
                 return ResponseEntity.badRequest().body(ErrorResponse.createBasicError(HttpStatus.BAD_REQUEST, "New password cannot be same as current", "PASSWORD_SAME_AS_OLD"));
             }
-            user.setPassword(request.getNewPassword());
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            passwordToUse = request.getNewPassword();
         }
+
         try {
             Utilisateur updatedUser = utilisateurService.saveUtilisateur(user);
-            return ResponseEntity.ok(updatedUser);
+            // Generate new token after update with the correct password
+            AuthenticationRequest authRequest = new AuthenticationRequest();
+            authRequest.setUsername(updatedUser.getUsername());
+            authRequest.setPassword(passwordToUse);
+            AuthenticationResponse authResponse = authenticationService.authenticate(authRequest);
+            return ResponseEntity.ok(authResponse);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(ErrorResponse.createBasicError(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating profile: " + e.getMessage(), "UPDATE_ERROR"));
         }

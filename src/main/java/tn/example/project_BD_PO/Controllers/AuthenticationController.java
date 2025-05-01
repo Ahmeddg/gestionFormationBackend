@@ -23,27 +23,6 @@ public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
 
-    @PreAuthorize("hasRole('ADMINISTRATEUR')")
-    @PostMapping("/register")
-    public ResponseEntity<?> register(
-            @Valid @RequestBody Utilisateur request
-    ) {
-        try {
-            AuthenticationResponse response = authenticationService.register(request);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                    .body(response);
-        } catch (Exception ex) {
-            log.error("Registration error for user: {}", request.getUsername(), ex);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ErrorResponse.createBasicError(
-                            HttpStatus.BAD_REQUEST,
-                            "Registration failed: " + ex.getMessage(),
-                            "REGISTRATION_ERROR"
-                    ));
-        }
-    }
-
     @PostMapping("/login")
     public ResponseEntity<?> authenticate(
             @Valid @RequestBody AuthenticationRequest request
