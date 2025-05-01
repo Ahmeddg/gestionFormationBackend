@@ -24,13 +24,19 @@ public class UtilisateurService {
     public Optional<Utilisateur> getUtilisateurById(Integer id) {
         return utilisateurRepository.findById(Long.valueOf(id));
     }
-
-    public Utilisateur saveUtilisateur(Utilisateur utilisateur) {
-        utilisateur.setPassword(new BCryptPasswordEncoder().encode(utilisateur.getPassword()));
-        return utilisateurRepository.save(utilisateur);
+    
+    public Optional<Utilisateur> getUtilisateurByUsername(String username) {
+        return utilisateurRepository.findByUsername(username);
     }
 
+    public Utilisateur saveUtilisateur(Utilisateur utilisateur) {
+        return utilisateurRepository.save(utilisateur);
+    }
+    
     public void deleteUtilisateur(Integer id) {
+        if (!utilisateurRepository.existsById(Long.valueOf(id))) {
+            throw new IllegalArgumentException("Utilisateur not found with id: " + id);
+        }
         utilisateurRepository.deleteById(Long.valueOf(id));
     }
 

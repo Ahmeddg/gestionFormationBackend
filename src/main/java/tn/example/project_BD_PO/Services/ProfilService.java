@@ -21,9 +21,27 @@ public class ProfilService {
     }
 
     public Profil saveProfil(Profil profil) {
+        if (profil.getLibelle() == null || profil.getLibelle().trim().isEmpty()) {
+            throw new IllegalArgumentException("Libelle est obligatoire et ne doit pas être vide.");
+        }
+        // Uniqueness check for create
+        if (profil.getId() == null && profilRepository.findAll().stream().anyMatch(p -> p.getLibelle().equalsIgnoreCase(profil.getLibelle()))) {
+            throw new IllegalArgumentException("Un profil avec ce libelle existe déjà.");
+        }
+        // Uniqueness check for update
+        if (profil.getId() != null) {
+            Optional<Profil> existing = profilRepository.findById(profil.getId());
+            if (existing.isPresent() && !existing.get().getLibelle().equalsIgnoreCase(profil.getLibelle()) && profilRepository.findAll().stream().anyMatch(p -> p.getLibelle().equalsIgnoreCase(profil.getLibelle()))) {
+                throw new IllegalArgumentException("Un profil avec ce libelle existe déjà.");
+            }
+        }
         return profilRepository.save(profil);
     }
-    public void deleteProfil(int id) {
+
+    public void deleteProfil(Integer id) {
+        if (!profilRepository.existsById(id)) {
+            throw new IllegalArgumentException("Profil introuvable avec l'id: " + id);
+        }
         profilRepository.deleteById(id);
     }
     public Profil updateProfil(Profil profil) {

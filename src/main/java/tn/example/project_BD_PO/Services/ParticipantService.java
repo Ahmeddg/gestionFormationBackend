@@ -8,6 +8,7 @@ import tn.example.project_BD_PO.Entities.*;
 import tn.example.project_BD_PO.Repositories.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,14 +20,44 @@ public class ParticipantService {
 
 
     public Participant saveParticipant(Participant participant) {
+        if (participant.getNom() == null || participant.getNom().trim().isEmpty()) {
+            throw new IllegalArgumentException("Nom est obligatoire et ne doit pas être vide.");
+        }
+        if (participant.getPrenom() == null || participant.getPrenom().trim().isEmpty()) {
+            throw new IllegalArgumentException("Prenom est obligatoire et ne doit pas être vide.");
+        }
+        if (participant.getEmail() == null || participant.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email est obligatoire et ne doit pas être vide.");
+        }
+        if (!participant.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            throw new IllegalArgumentException("Format d'email invalide.");
+        }
+        if (participant.getTel() == null || participant.getTel().trim().isEmpty()) {
+            throw new IllegalArgumentException("Numéro de téléphone est obligatoire et ne doit pas être vide.");
+        }
+        // Uniqueness check for email (create)
+        if (participant.getId() == null && participantRepository.findAll().stream().anyMatch(p -> p.getEmail().equalsIgnoreCase(participant.getEmail()))) {
+            throw new IllegalArgumentException("Un participant avec cet email existe déjà.");
+        }
+        // Uniqueness check for tel (create)
+        if (participant.getId() == null && participantRepository.findAll().stream().anyMatch(p -> p.getTel().equals(participant.getTel()))) {
+            throw new IllegalArgumentException("Un participant avec ce numéro de téléphone existe déjà.");
+        }
+        // Uniqueness check for update
+        if (participant.getId() != null) {
+            Optional<Participant> existing = participantRepository.findById(participant.getId());
+            if (existing.isPresent()) {
+                if (!existing.get().getEmail().equalsIgnoreCase(participant.getEmail()) && participantRepository.findAll().stream().anyMatch(p -> p.getEmail().equalsIgnoreCase(participant.getEmail()))) {
+                    throw new IllegalArgumentException("Un participant avec cet email existe déjà.");
+                }
+                if (!existing.get().getTel().equals(participant.getTel()) && participantRepository.findAll().stream().anyMatch(p -> p.getTel().equals(participant.getTel()))) {
+                    throw new IllegalArgumentException("Un participant avec ce numéro de téléphone existe déjà.");
+                }
+            }
+        }
 
         Profil profil = profilRepository.findById(participant.getProfil().getId())
                 .orElseThrow(() -> new RuntimeException("Profil not found"));
-
-        if (participantRepository.existsByEmail(participant.getEmail())) {
-            throw new RuntimeException("Email already exists");
-        }
-
 
         participant.setProfil(profil);
         return participantRepository.save(participant);
@@ -67,6 +98,9 @@ public class ParticipantService {
 
 
     public void deleteParticipant(Integer id) {
+        if (!participantRepository.existsById(id)) {
+            throw new IllegalArgumentException("Participant introuvable avec l'id: " + id);
+        }
         Participant participant = getParticipantById(id);
         // Remove from all formations
         participant.getFormations().forEach(formation ->

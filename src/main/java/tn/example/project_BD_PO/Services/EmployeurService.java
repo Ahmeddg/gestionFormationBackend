@@ -27,6 +27,20 @@ public class EmployeurService {
 
     // Save new or update existing employeur
     public Employeur saveEmployeur(Employeur employeur) {
+        if (employeur.getNomEmployeur() == null || employeur.getNomEmployeur().trim().isEmpty()) {
+            throw new IllegalArgumentException("Le nom de l'employeur est obligatoire et ne doit pas être vide.");
+        }
+        // Uniqueness check for create
+        if (employeur.getId() == null && employeurRepository.findAll().stream().anyMatch(e -> e.getNomEmployeur().equalsIgnoreCase(employeur.getNomEmployeur()))) {
+            throw new IllegalArgumentException("Un employeur avec ce nom existe déjà.");
+        }
+        // Uniqueness check for update
+        if (employeur.getId() != null) {
+            Optional<Employeur> existing = employeurRepository.findById(employeur.getId());
+            if (existing.isPresent() && !existing.get().getNomEmployeur().equalsIgnoreCase(employeur.getNomEmployeur()) && employeurRepository.findAll().stream().anyMatch(e -> e.getNomEmployeur().equalsIgnoreCase(employeur.getNomEmployeur()))) {
+                throw new IllegalArgumentException("Un employeur avec ce nom existe déjà.");
+            }
+        }
         return employeurRepository.save(employeur);
     }
 
@@ -39,6 +53,9 @@ public class EmployeurService {
 
     // Delete employeur by id
     public void deleteEmployeur(Integer id) {
+        if (!employeurRepository.existsById(id)) {
+            throw new IllegalArgumentException("Employeur introuvable avec l'id: " + id);
+        }
         employeurRepository.deleteById(id);
     }
 }

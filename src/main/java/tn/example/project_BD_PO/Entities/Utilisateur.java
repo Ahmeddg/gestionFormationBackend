@@ -38,15 +38,19 @@ public class Utilisateur implements UserDetails {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean enabled = true;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean accountNonExpired = true;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean accountNonLocked = true;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean credentialsNonExpired = true;
 

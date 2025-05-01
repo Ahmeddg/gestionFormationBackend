@@ -14,13 +14,13 @@ public interface FormationRepository extends JpaRepository<Formation, Integer> {
     
     @Query("SELECT COUNT(f) FROM Formation f WHERE f.dateFin > CURRENT_DATE")
     long countActiveFormations();
-    long countByFormateur(Formateur formateur);
+    
     @Query("SELECT f FROM Formation f ORDER BY SIZE(f.participants) DESC LIMIT 3")
-    List<Formation> findMostPopularFormations();
+    List<Formation> findBestFormations();
+    long countByFormateur(Formateur formateur);
 
     @Query("SELECT SUM(f.budget) FROM Formation f")
     Long sumAllBudgets();
-
     @Query("SELECT f.annee AS year, SUM(f.budget) AS totalBudget " +
             "FROM Formation f GROUP BY f.annee")
     List<BudgetByYear> sumBudgetByYear();

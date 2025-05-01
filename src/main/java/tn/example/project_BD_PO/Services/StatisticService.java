@@ -6,7 +6,6 @@ import tn.example.project_BD_PO.Entities.*;
 import tn.example.project_BD_PO.Repositories.FormateurRepository;
 import tn.example.project_BD_PO.Repositories.FormationRepository;
 
-import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +18,11 @@ public class StatisticService {
     private final FormateurRepository formateurRepository;
 
     public List<Formation> getBestFormations() {
-        return formationRepository.findMostPopularFormations();
+        List<Formation> formations = formationRepository.findBestFormations();
+        if (formations == null || formations.isEmpty()) {
+            throw new IllegalArgumentException("Aucune formation trouvée pour les statistiques demandées.");
+        }
+        return formations;
     }
 
     public long getTotalFormationsBudget() {

@@ -34,6 +34,27 @@ public class FormationService {
     }
 
     public Formation saveFormation(Formation formation) {
+        if (formation.getTitre() == null || formation.getTitre().trim().isEmpty()) {
+            throw new IllegalArgumentException("Titre est obligatoire et ne doit pas être vide.");
+        }
+        if (formation.getAnnee() <= 0) {
+            throw new IllegalArgumentException("Année doit être supérieure à 0.");
+        }
+        if (formation.getDuree() <= 0) {
+            throw new IllegalArgumentException("Durée doit être supérieure à 0.");
+        }
+        if (formation.getBudget() < 0) {
+            throw new IllegalArgumentException("Le budget ne peut pas être négatif.");
+        }
+        if (formation.getLieu() == null || formation.getLieu().trim().isEmpty()) {
+            throw new IllegalArgumentException("Lieu est obligatoire et ne doit pas être vide.");
+        }
+        if (formation.getDomaine() == null) {
+            throw new IllegalArgumentException("Domaine est obligatoire.");
+        }
+        if (formation.getFormateur() == null) {
+            throw new IllegalArgumentException("Formateur est obligatoire.");
+        }
         Formateur formateur = formateurRepository.findById(formation.getFormateur().getId()).orElseThrow();
         Domaine domaine = domaineRepository.findById(formation.getDomaine().getId()).orElseThrow();
         formation.setDomaine(domaine);
@@ -62,5 +83,12 @@ public class FormationService {
         }
 
         formationRepository.delete(formation);
+    }
+
+    public void deleteFormation(Integer id) {
+        if (!formationRepository.existsById(id)) {
+            throw new IllegalArgumentException("Formation introuvable avec l'id: " + id);
+        }
+        formationRepository.deleteById(id);
     }
 }

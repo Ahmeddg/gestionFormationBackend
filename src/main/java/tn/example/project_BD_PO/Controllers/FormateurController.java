@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import java.util.Map;
 import java.util.List;
+import org.springframework.http.HttpStatus;
+import tn.example.project_BD_PO.Security.ErrorResponse;
 
 @RestController
 @SecurityRequirement(name = "bearerAuth")
@@ -24,41 +26,49 @@ public class FormateurController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Formateur> getFormateurById(@PathVariable Integer id) {
+    public ResponseEntity<?> getFormateurById(@PathVariable Integer id) {
         return formateurService.getFormateurById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ErrorResponse.createBasicError(HttpStatus.NOT_FOUND, "Formateur not found with id: " + id, "FORMATEUR_NOT_FOUND")));
     }
 
     @PostMapping
-    public ResponseEntity<Formateur> createFormateur(@RequestBody Formateur formateur) {
-        return ResponseEntity.ok(formateurService.saveFormateur(formateur));
+    public ResponseEntity<?> createFormateur(@RequestBody Formateur formateur) {
+        try {
+            return ResponseEntity.ok(formateurService.saveFormateur(formateur));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ErrorResponse.createBasicError(HttpStatus.BAD_REQUEST, "Error creating formateur: " + e.getMessage(), "FORMATEUR_CREATION_ERROR"));
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Formateur> updateFormateur(@PathVariable Integer id, @RequestBody Formateur formateur) {
+    public ResponseEntity<?> updateFormateur(@PathVariable Integer id, @RequestBody Formateur formateur) {
         if (formateurService.getFormateurById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ErrorResponse.createBasicError(HttpStatus.NOT_FOUND, "Formateur not found with id: " + id, "FORMATEUR_NOT_FOUND"));
         }
-        formateur.setId(id);
-        return ResponseEntity.ok(formateurService.saveFormateur(formateur));
+        try {
+            formateur.setId(id);
+            return ResponseEntity.ok(formateurService.saveFormateur(formateur));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ErrorResponse.createBasicError(HttpStatus.BAD_REQUEST, "Error updating formateur: " + e.getMessage(), "FORMATEUR_UPDATE_ERROR"));
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteFormateur(@PathVariable Integer id) {
         if (formateurService.getFormateurById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ErrorResponse.createBasicError(HttpStatus.NOT_FOUND, "Formateur not found with id: " + id, "FORMATEUR_NOT_FOUND"));
         }
         try {
             formateurService.deleteFormateur(id);
             return ResponseEntity.noContent().build();
         } catch (DataIntegrityViolationException ex) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(Map.of("message", "Ce formateur est assigné à une formation et ne peut pas être supprimé."));
+            return ResponseEntity.badRequest().body(ErrorResponse.createBasicError(HttpStatus.BAD_REQUEST, "Ce formateur est assigné à une formation et ne peut pas être supprimé.", "FORMATEUR_ASSIGNED"));
         } catch (Exception ex) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("message", "Une erreur inattendue s'est produite lors de la suppression."));
+            return ResponseEntity.internalServerError().body(ErrorResponse.createBasicError(HttpStatus.INTERNAL_SERVER_ERROR, "Une erreur inattendue s'est produite lors de la suppression.", "FORMATEUR_DELETE_ERROR"));
         }
     }
 }

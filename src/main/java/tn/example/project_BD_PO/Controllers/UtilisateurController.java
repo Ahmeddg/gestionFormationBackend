@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import tn.example.project_BD_PO.Entities.Role;
 import tn.example.project_BD_PO.Entities.Utilisateur;
 import tn.example.project_BD_PO.Services.UtilisateurService;
+import tn.example.project_BD_PO.Security.ErrorResponse;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -53,10 +55,11 @@ public class UtilisateurController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Utilisateur> getUtilisateurById(@PathVariable Integer id) {
+    public ResponseEntity<?> getUtilisateurById(@PathVariable Integer id) {
         return utilisateurService.getUtilisateurById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ErrorResponse.createBasicError(HttpStatus.NOT_FOUND, "Utilisateur not found with id: " + id, "UTILISATEUR_NOT_FOUND")));
     }
 
     @PostMapping("/updateRole/{userId}/{role}")
@@ -66,20 +69,41 @@ public class UtilisateurController {
             @PathVariable String role
     ) {
         Optional<Utilisateur> utilisateur = utilisateurService.getUtilisateurById(userId);
-
         if (utilisateur.isEmpty() || role.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ErrorResponse.createBasicError(HttpStatus.NOT_FOUND, "Utilisateur or role not found", "UTILISATEUR_OR_ROLE_NOT_FOUND"));
         }
-
-        utilisateur.get().setRole(Role.valueOf(role));
-        utilisateurService.saveUtilisateur(utilisateur.get());
-        return ResponseEntity.ok(utilisateur);
+        try {
+            utilisateur.get().setRole(Role.valueOf(role));
+            utilisateurService.saveUtilisateur(utilisateur.get());
+            return ResponseEntity.ok(utilisateur);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ErrorResponse.createBasicError(HttpStatus.BAD_REQUEST, "Invalid role: " + role, "INVALID_ROLE"));
+        }
     }
 
     @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @PostMapping
-    public ResponseEntity<Utilisateur> createUtilisateur(@RequestBody Utilisateur utilisateur) {
-        return ResponseEntity.ok(utilisateurService.saveUtilisateur(utilisateur));
+    public ResponseEntity<?> createUtilisateur(@RequestBody Utilisateur utilisateur) {
+        try {
+                    if (utilisateur.getPassword() == null || utilisateur.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be empty");
+        }
+        if (utilisateur.getUsername() == null || utilisateur.getUsername().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be empty");
+        }
+        if (utilisateur.getRole() == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
+        // Check if the username already exists
+        if (utilisateurService.getUtilisateurByUsername(utilisateur.getUsername()).isPresent()) {
+            throw new IllegalArgumentException("Username already exists");
+        }
+        utilisateur.setPassword(new BCryptPasswordEncoder().encode(utilisateur.getPassword()));
+            return ResponseEntity.ok(utilisateurService.saveUtilisateur(utilisateur));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ErrorResponse.createBasicError(HttpStatus.BAD_REQUEST, "Error creating utilisateur: " + e.getMessage(), "UTILISATEUR_CREATION_ERROR"));
+        }
     }
 
     @PutMapping("/{id}")
@@ -90,54 +114,52 @@ public class UtilisateurController {
             BindingResult bindingResult
     ) {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        // Input validation
         if (bindingResult.hasErrors()) {
-            return ResponseEntity.badRequest().body("Invalid request data");
+            return ResponseEntity.badRequest().body(ErrorResponse.createBasicError(HttpStatus.BAD_REQUEST, "Invalid request data", "VALIDATION_ERROR"));
         }
-
-        // Verify ownership
         if (!userDetails.getUsername().equals(request.getUsername())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ErrorResponse.createBasicError(HttpStatus.FORBIDDEN, "You are not allowed to update this user", "FORBIDDEN"));
         }
-
         Optional<Utilisateur> optionalUser = utilisateurService.getUtilisateurById(id);
         if (optionalUser.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ErrorResponse.createBasicError(HttpStatus.NOT_FOUND, "Utilisateur not found with id: " + id, "UTILISATEUR_NOT_FOUND"));
         }
-
         Utilisateur user = optionalUser.get();
-
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Current password is incorrect");
+                    .body(ErrorResponse.createBasicError(HttpStatus.UNAUTHORIZED, "Current password is incorrect", "INCORRECT_PASSWORD"));
         }
-
-        // Password strength validation
         if (request.getNewPassword() != null && !request.getNewPassword().isEmpty()) {
             if (request.getNewPassword().length() < 8) {
-                return ResponseEntity.badRequest().body("Password must be at least 8 characters");
+                return ResponseEntity.badRequest().body(ErrorResponse.createBasicError(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters", "WEAK_PASSWORD"));
             }
             if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
-                return ResponseEntity.badRequest().body("New password cannot be same as current");
+                return ResponseEntity.badRequest().body(ErrorResponse.createBasicError(HttpStatus.BAD_REQUEST, "New password cannot be same as current", "PASSWORD_SAME_AS_OLD"));
             }
             user.setPassword(request.getNewPassword());
         }
-
         try {
             Utilisateur updatedUser = utilisateurService.saveUtilisateur(user);
             return ResponseEntity.ok(updatedUser);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error updating profile");
+            return ResponseEntity.internalServerError().body(ErrorResponse.createBasicError(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating profile: " + e.getMessage(), "UPDATE_ERROR"));
         }
     }
 
     @PreAuthorize("hasRole('ADMINISTRATEUR')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUtilisateur(@PathVariable Integer id) {
+    public ResponseEntity<?> deleteUtilisateur(@PathVariable Integer id) {
         if (utilisateurService.getUtilisateurById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ErrorResponse.createBasicError(HttpStatus.NOT_FOUND, "Utilisateur not found with id: " + id, "UTILISATEUR_NOT_FOUND"));
         }
-        utilisateurService.deleteUtilisateur(id);
-        return ResponseEntity.noContent().build();
+        try {
+            utilisateurService.deleteUtilisateur(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ErrorResponse.createBasicError(HttpStatus.INTERNAL_SERVER_ERROR, "Error deleting utilisateur: " + e.getMessage(), "DELETE_ERROR"));
+        }
     }
 }
